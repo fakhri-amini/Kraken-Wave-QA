@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kraken Wave Drink</title>
+</head>
+<body>
+
+<h2>Kraken Wave Drink</h2>
+<a href="/cart">Cart ({{ cart_count }})</a>
+
+<h1>Menu</h1>
+
+{% for drink in drinks %}
+    <div>
+        <h3>{{ drink.name }}</h3>
+        <p>Rp {{ drink.price }}</p>
+
+        <a href="/add/{{ drink.id }}/home">
+            <button>Add</button>
+        </a>
+    </div>
+{% endfor %}
+
+</body>
+</html>
