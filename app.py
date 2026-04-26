@@ -1,14 +1,19 @@
 from flask import Flask, render_template, session, redirect, url_for, request, jsonify
 import mysql.connector
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 app = Flask(__name__)
 app.secret_key = "secret123"
 
 db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    passwd="root@35",
-    database="Kraken_Wave"
+    host=os.getenv("DB_HOST"),
+    user=os.getenv("DB_USER"),
+    passwd=os.getenv("DB_PASSWORD"),
+    database=os.getenv("DB_NAME")
 )
 
 def get_drinks():
