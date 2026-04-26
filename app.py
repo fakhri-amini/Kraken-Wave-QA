@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, redirect, url_for
+from flask import Flask, render_template, session, redirect, url_for, request, jsonify
 import mysql.connector
 
 app = Flask(__name__)
@@ -108,9 +108,80 @@ def checkout():
                     (order_id, drink["id"], qty)
                 )
 
-    db.commit()  # <-- PINDAH KE LUAR LOOP
-    session["cart"] = {}  # <-- PINDAH KE LUAR LOOP
-    return "Checkout berhasil"  # <-- PINDAH KE LUAR LOOP
+    db.commit()
+    session["cart"] = {}
+    return "Checkout berhasil"
+
+
+# API ROUTES
+# API GET DRINKS
+@app.route("/api/drinks", methods=["GET"])
+def api_get_drinks():
+    drinks = get_drinks()
+    return jsonify(drinks)
+
+
+# API ADD TO CART
+@app.route("/api/cart/add", methods=["POST"])
+def api_add_to_cart():
+    data = request.get_json()
+
+    if not data or "id" not in data:
+        return jsonify({"error": "ID is required"}), 400
+
+    if not isinstance(data["id"], int):
+        return jsonify({"error": "ID must be integer"}), 400
+
+    drink_id = str(data["id"])
+    cart = session.get("cart", {})
+
+    if drink_id in cart:
+        cart[drink_id] += 1
+    else:
+        cart[drink_id] = 1
+
+    session["cart"] = cart
+    session.modified = True
+
+    return jsonify({
+        "message": "Item added",
+        "cart": cart
+    })
+
+
+# API CHECKOUT
+@app.route("/api/checkout", methods=["POST"])
+def api_checkout():
+    cart = session.get("cart", {})
+    drinks = get_drinks()
+
+    cursor = db.cursor()
+    total = 0
+
+    for id_str, qty in cart.items():
+        for drink in drinks:
+            if drink["id"] == int(id_str):
+                total += drink["price"] * qty
+
+    cursor.execute("INSERT INTO orders(total) VALUES (%s)", (total,))
+    order_id = cursor.lastrowid
+
+    for id_str, qty in cart.items():
+        for drink in drinks:
+            if drink["id"] == int(id_str):
+                cursor.execute(
+                    "INSERT INTO order_items(order_id, drink_id, qty) VALUES (%s,%s,%s)",
+                    (order_id, drink["id"], qty)
+                )
+
+    db.commit()
+    session["cart"] = {}
+
+    return jsonify({
+        "message": "Checkout berhasil",
+        "order_id": order_id,
+        "total": total
+    })
 
 if __name__=="__main__":
     app.run(debug=True)
