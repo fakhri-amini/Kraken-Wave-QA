@@ -1,4 +1,4 @@
-# 🌊 Kraken Wave - QA Automation Project
+# Kraken Wave - QA Automation Project
 
 Kraken Wave is a simple Flask web application integrated with MySQL and tested using QA automation tools such as Selenium WebDriver and Pytest.
 
